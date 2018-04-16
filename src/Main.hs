@@ -1,23 +1,22 @@
 {-# LANGUAGE CPP #-}
+
+-- External imports
 import Control.Applicative       ((<$>))
 import Control.Exception.Extra   (catchAny)
-import Control.Monad.IfElse
-import FRP.Yampa                 as Yampa
-import Game.Resource.Manager.Ref
-import Game.Resource.Spec
+import Control.Monad.IfElse      (awhen)
+import FRP.Yampa                 as Yampa (reactimate)
+import Game.Resource.Manager.Ref (loadResources)
+import Game.Resource.Spec        (localizeResourceSpec)
+import Paths_haskanoid           (getDataFileName)
 
-import GamePlay
-import Input
-import Paths_haskanoid
+-- Internal imports
+import GamePlay (wholeGame)
+import Input    (initializeInputDevices, senseInput)
 
-#ifdef sdl
-import Display
-import Game.Clock
-#endif
-
-#ifdef sdl2
-import Display
-import Game.Clock
+-- Device specific imports
+#if defined(sdl) || defined(sdl2)
+import Display    (gameResourceSpec, initGraphs, initializeDisplay, render)
+import Game.Clock (initializeTimeRef, milisecsToSecs, senseTimeRef)
 #endif
 
 #ifdef ghcjs
@@ -28,6 +27,7 @@ import GHCJSNow
 #endif
 
 -- TODO: Use MaybeT or ErrorT to report errors
+-- | Start game and keep game loop alive.
 main :: IO ()
 main = (`catchAny` print) $ do
 

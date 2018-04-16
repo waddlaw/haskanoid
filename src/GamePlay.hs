@@ -39,25 +39,52 @@
 module GamePlay (wholeGame) where
 
 -- External imports
-import Control.Applicative ((<$>))
-import Data.IdentityList
-import Data.List
-import Data.Ord.Extra
-import FRP.Yampa
-import FRP.Yampa.Extra
-import FRP.Yampa.VectorSpace.Extra
-import Physics.CollisionEngine
-import Physics.TwoDimensions.Dimensions
-import Physics.TwoDimensions.PhysicalObject (Collision(..))
-import Physics.TwoDimensions.Side
+import Control.Applicative                  ((<$>))
+import Data.IdentityList                    (IL, assocsIL, deleteIL, elemsIL,
+                                             insertIL_, listToIL)
+import Data.List                            (find)
+import Data.Ord.Extra                       (inRange)
+import FRP.Yampa                            (DTime, Event (Event, NoEvent), SF,
+                                             accumHoldBy, after, arr, dSwitch,
+                                             delay, dpSwitchB, edge, integral,
+                                             lMerge, localTime, loopPre,
+                                             mergeBy, noEvent, returnA, switch,
+                                             tag, (&&&), (*^), (-->), (>>>),
+                                             (^+^), (^-^), (^<<), (^>>))
+import FRP.Yampa.Extra                      (futureDSwitch)
+import FRP.Yampa.VectorSpace.Extra          (limitNorm)
+import Physics.CollisionEngine              (changedVelocity, detectCollisions,
+                                             isInCollision, isInCollisionWith)
+import Physics.TwoDimensions.Dimensions     (Pos2D, Size2D, Vel2D)
+import Physics.TwoDimensions.PhysicalObject (Collision (..))
+import Physics.TwoDimensions.Side           (Side (BottomSide, LeftSide, RightSide, TopSide))
 
 -- Internal imports
-import Constants
-import GameState
-import Input
-import Levels
-import Objects
-import ObjectSF
+import Constants (ballHeight, ballWidth, blockHeight, blockWidth,
+                  destroyBallUpHeight, destroyBallUpWidth, gameHeight,
+                  gameWidth, initialBallVel, initialLevel, levelFinishedDelay,
+                  livesUpHeight, livesUpWidth, loadingDelay, maxVNorm,
+                  mockUpHeight, mockUpWidth, paddleHeight, paddleMargin,
+                  paddleWidth, pointsUpHeight, pointsUpWidth, stdLives)
+import GameState (GameInfo (GameInfo), GameState (GameState),
+                  GameStatus (GameFinished, GameLoading, GameOver, GamePlaying),
+                  gameInfo, gameLevel, gameLives, gameObjects, gamePoints,
+                  gameStatus, neutralGameInfo, neutralGameState)
+import Input     (Controller, controllerClick, controllerPos)
+import Levels    (blockCfgs, levelName, levels, numLevels)
+import Objects   (AlwaysPowerUp, Collisions, Object (Object), ObjectKind (Side),
+                  ObjectKind (Ball, Block, Paddle, PowerUp), ObjectName,
+                  ObjectProperties (SideProps),
+                  ObjectProperties (BallProps, BlockProps, PaddleProps, PowerUpProps),
+                  PowerUpKind (DestroyBallUp, LivesUp, MockUp, PointsUp),
+                  SignalPowerUp, canCauseCollisions, collisionEnergy,
+                  collisionObjectKind, collisionObjectName, isBlock, isPaddle,
+                  objectAcc, objectDead, objectHit, objectKind, objectName,
+                  objectPos, objectProperties, objectVel)
+import ObjectSF  (ObjectInput (ObjectInput), ObjectOutput (ObjectOutput),
+                  ObjectOutputs, ObjectSF, ObjectSFs, PowerUpDef (PowerUpDef),
+                  births, collisions, extractObjects, harakiri, knownObjects,
+                  livingObject, outputObject, userInput)
 
 -- * General state transitions
 

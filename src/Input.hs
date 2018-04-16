@@ -36,7 +36,6 @@ import Control.Monad.Extra
 
 -- External imports (SDL)
 #if defined(sdl) || defined(sdl2)
-import Game.Clock
 import Graphics.UI.SDL       as SDL
 import Graphics.UI.SDL.Extra (isEmptyEvent)
 #endif
@@ -91,10 +90,6 @@ import Data.Word
 import Freenect
 import qualified Data.Vector.Storable as V
 #endif
-
--- Internal imports
-
-import Constants
 
 -- * Game controller
 

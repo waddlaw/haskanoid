@@ -1,7 +1,7 @@
 {-# LANGUAGE CPP #-}
 module ResourceSpecs where
 
-import Game.Resource.Spec
+import Game.Resource.Spec (ColorSpec, FontSpec, ImageSpec, MusicSpec, SoundSpec)
 
 -- * Game assets
 

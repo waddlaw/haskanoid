@@ -3,6 +3,10 @@ module Constants where
 import FRP.Yampa
 import Physics.TwoDimensions.Dimensions
 
+-- | Caption of the game.
+caption :: String
+caption = "Haskanoid"
+
 -- * Main screen proportion
 width :: Num a => a
 width = 640
@@ -33,13 +37,13 @@ gameAreaMinLeftMargin = 25
 -- * Time \/ Delays
 loadingDelay :: DTime
 loadingDelay = 2 -- seconds
-      
+
 levelFinishedDelay :: DTime
 levelFinishedDelay = 4 -- seconds
-      
+
 -- restartDelay :: Time
 -- restartDelay = 3
--- 
+--
 -- wonDelay :: Time
 -- wonDelay = 3
 
@@ -68,7 +72,7 @@ blockSeparation = 10
 
 pointsUpWidth, pointsUpHeight :: Double
 pointsUpWidth  = 30
-pointsUpHeight = 30 
+pointsUpHeight = 30
 
 livesUpWidth, livesUpHeight :: Double
 livesUpWidth  = 30

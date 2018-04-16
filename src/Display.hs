@@ -7,42 +7,49 @@ module Display
   )
   where
 
-import Control.Monad
+-- External imports
+import Control.Monad              (unless, when)
 import Control.Monad.IfElse       (awhen)
-import Control.Monad.Trans.Reader
-import Game.Render.Monad
-import Game.Render.Renderer.SDL ()
-import Game.Resource.Manager.Ref  (prepareAllResources, tryGetResourceSound,
-                                   tryGetResourceMusic)
-import Game.Audio
-import Game.VisualElem
-import Game.VisualElem.Render
-import Graphics.UI.Align
-import Graphics.UI.Collage
+import Control.Monad.Trans.Reader (runReaderT)
+import Game.Audio                 (initAudio, musicIsPlaying, playMusic,
+                                   playSoundFX)
+import Game.Render.Monad          (onRenderingCtx)
+import Game.Render.Renderer.SDL   ()
+import Game.Resource.Manager.Ref  (tryGetResourceMusic, tryGetResourceSound)
+import Game.VisualElem            (VisualElem (VisualImage, VisualText))
+import Game.VisualElem.Render     (renderVE)
+import Graphics.UI.Align          (Align (Align),
+                                   HAlign (HCenter, HLeft, HRight),
+                                   VAlign (VCenter, VTop))
+import Graphics.UI.Collage        (Collage (CollageItem, CollageItems))
 import Graphics.UI.SDL            as SDL hiding (flip)
 
-import Constants
-import GameState
-import Objects
-import ResourceManager
+-- Internal imports
+import Constants       (caption, gameLeft, gameTop, height, width)
+import GameState       (GameState, GameStatus (GameFinished, GameLoading,
+                        GameOver, GamePaused, GamePlaying, GameStarted),
+                        gameInfo, gameLevel, gameLives, gameObjects, gamePoints,
+                        gameStatus)
+import Objects         (Object, ObjectKind (Ball, Block, Paddle, PowerUp),
+                        ObjectProperties (BlockProps),
+                        PowerUpKind (DestroyBallUp, LivesUp, MockUp, PointsUp),
+                        isSide, objectHit, objectKind, objectProperties,
+                        objectTopLevelCorner)
+import ResourceManager (ResourceId (IdBallImg, IdBgImg, IdBgMusic, IdBlock1Img,
+                        IdBlock2Img, IdBlock3Img, IdBlockHitFX, IdBlockPuImg,
+                        IdDestroyBallUpImg, IdGameFont, IdGameFontColor,
+                        IdLivesUpImg, IdMockUpImg, IdPaddleImg, IdPointsUpImg),
+                        ResourceMgr, gameResourceSpec)
 
 #ifdef sdl
 
-type RenderingCtx     = ()
-type RealRenderingCtx = Surface
+type RenderingCtx     = Surface
 
 #elif sdl2
 import Game.Render.Monad.SDL    ()
+import Game.Resource.Manager.Ref (prepareAllResources)
 
-type RealRenderingCtx = (Renderer, Window)
 type RenderingCtx     = (Renderer, Window)
-#endif
-
-getRealRenderingCtx :: RenderingCtx -> IO RealRenderingCtx
-#ifdef sdl
-getRealRenderingCtx () = getVideoSurface
-#else
-getRealRenderingCtx = return
 #endif
 
 -- * Initialization
@@ -54,12 +61,12 @@ initializeDisplay = do
 
   initAudio
 
-initGraphs :: ResourceManager.ResourceMgr -> IO RenderingCtx
+initGraphs :: ResourceMgr -> IO RenderingCtx
 #ifdef sdl
-initGraphs _mgr = do
+initGraphs _rMgr = do
   -- Create window
   _screen <- SDL.setVideoMode width height 32 [SWSurface]
-  SDL.setCaption "Test" ""
+  SDL.setCaption caption ""
 
   -- Important if we want the keyboard to work right (I don't know
   -- how to make it work otherwise)
@@ -68,14 +75,16 @@ initGraphs _mgr = do
   -- Hide mouse
   SDL.showCursor False
 
+  SDL.getVideoSurface
 #elif sdl2
 
-initGraphs mgr = do
+initGraphs rMgr = do
   -- Create window
   (window, renderer) <- SDL.createWindowAndRenderer (Size width height) [WindowShown, WindowOpengl]
+  setWindowTitle window caption
   renderSetLogicalSize renderer width height
 
-  prepareAllResources mgr renderer
+  prepareAllResources rMgr renderer
 
   return (renderer, window)
 #endif
@@ -86,7 +95,7 @@ initGraphs mgr = do
 render :: ResourceMgr -> GameState -> RenderingCtx -> IO ()
 render resourceManager shownState ctx = do
   audio   resourceManager shownState
-  display resourceManager shownState =<< getRealRenderingCtx ctx
+  display resourceManager shownState ctx
 
 -- ** Audio
 
@@ -110,7 +119,7 @@ audioObject resourceManager object = when (objectHit object) $
 
 -- ** Visual rendering
 -- TODO: Uses undefined for rendering context, should get from Main
-display :: ResourceMgr -> GameState -> RealRenderingCtx -> IO ()
+display :: ResourceMgr -> GameState -> RenderingCtx -> IO ()
 display resourceManager shownState = onRenderingCtx $ \ctx ->
   flip runReaderT (resourceManager, undefined, ctx) $ renderVE $ CollageItems $
     concat [ [ bgItem, levelTxt, pointsTxt, livesTxt ], mStatusTxt, objItems ]
