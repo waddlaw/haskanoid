@@ -313,32 +313,32 @@ playLevel gim  = play >>> (composeGameState gim)
                is = [fmap (insertIL_ . createPowerUp) (births oo)
                     | (k,oo) <- assocsIL oos]
 
--- | Based on the internal play info, compose the main game state and detect
--- when a live is lost. When that happens, restart this SF with one less life
--- available.
---
--- NOTE: it will be some other SF's responsibility to determine if the player's
--- run out of lives.
+    -- | Based on the internal play info, compose the main game state and detect
+    -- when a live is lost. When that happens, restart this SF with one less life
+    -- available.
+    --
+    -- NOTE: it will be some other SF's responsibility to determine if the player's
+    -- run out of lives.
 
--- NOTE (about the code): We need to delay the initial event (if it happened to
--- occur) because, at the moment of switching, it will definitely occur and we
--- will fall in an infinite loop.  Therefore, this dswitch only switches for
--- non-start events.
-composeGameState :: GameInfoMini
-                 -> SF (ObjectOutputs, Bonus, Dead) GameState
-composeGameState gim@(GameInfoMini lvs lvl pts) = futureDSwitch
-  (composeGameState' gim)
-  (\_ -> composeGameState (GameInfoMini (lvs-1) lvl pts))
-  where
-    -- | Based on the internal play info, compose the main game state and
-    -- propagate whether a live is lost.
-    composeGameState' :: GameInfoMini
-                      -> SF (ObjectOutputs, Bonus, Dead) (GameState, Dead)
-    composeGameState' (GameInfoMini lvs lvl pts) = proc (oos, (lvsB, ptsB), dead) -> do
-      -- Compose game state
-      objects <- extractObjects -< oos
-      let gs = GameState objects (GameInfo GamePlaying (lvs+lvsB) lvl (pts+ptsB))
-      returnA -< (gs, dead)
+    -- NOTE (about the code): We need to delay the initial event (if it happened to
+    -- occur) because, at the moment of switching, it will definitely occur and we
+    -- will fall in an infinite loop.  Therefore, this dswitch only switches for
+    -- non-start events.
+    composeGameState :: GameInfoMini
+                     -> SF (ObjectOutputs, Bonus, Dead) GameState
+    composeGameState gim@(GameInfoMini lvs lvl pts) = futureDSwitch
+      (composeGameState' gim)
+      (\_ -> composeGameState (GameInfoMini (lvs-1) lvl pts))
+      where
+        -- | Based on the internal play info, compose the main game state and
+        -- propagate whether a live is lost.
+        composeGameState' :: GameInfoMini
+                          -> SF (ObjectOutputs, Bonus, Dead) (GameState, Dead)
+        composeGameState' (GameInfoMini lvs lvl pts) = proc (oos, (lvsB, ptsB), dead) -> do
+          -- Compose game state
+          objects <- extractObjects -< oos
+          let gs = GameState objects (GameInfo GamePlaying (lvs+lvsB) lvl (pts+ptsB))
+          returnA -< (gs, dead)
 
 -- ** Put in other modules?
 
