@@ -208,31 +208,6 @@ playLevelOrPause gim = playLevel gim
 --                 then g { gameInfo = o { gameStatus = GamePaused } }
 --                 else g
 
-
--- * Termination criteria
-
--- | Detect when the last level is finished.
-outOfLevels :: SF GameState (Event ())
-outOfLevels = arr ((>= numLevels) . gameLevel . gameInfo) >>> edge
-
--- | Detect when the last life is lost.
-outOfLives :: SF GameState (Event ())
-outOfLives = arr ((< 0) . gameLives . gameInfo) >>> edge
-
--- | Detect if the level is completed (ie. if there are no more blocks).
-isLevelCompleted :: SF GameState (Event GameState)
-isLevelCompleted = proc gs -> do
-  over <- edge -< (not . any isBlock . gameObjects ) gs
-  let snapshot = over `tag` gs
-  returnA -< snapshot
-
--- * Level playing
-
--- | Bonus are additional lives and additional points.
-type Bonus       = (Int, Int)
--- | Indicates the loss of a live.
-type Dead        = Event ()
-
 -- | Run the game, obtain the internal game's running state, and compose it
 -- with the more general 'GameState' using the known number of lives and
 -- points.
@@ -340,14 +315,22 @@ playLevel gim  = play >>> (composeGameState gim)
           let gs = GameState objects (GameInfo GamePlaying (lvs+lvsB) lvl (pts+ptsB))
           returnA -< (gs, dead)
 
--- ** Put in other modules?
+-- * Termination criteria
 
--- From the actual objects, detect which ones collide
-detectObjectCollisions :: SF (IL ObjectOutput) Collisions
-detectObjectCollisions = extractObjects >>> arr detectCollisions
+-- | Detect when the last level is finished.
+outOfLevels :: SF GameState (Event ())
+outOfLevels = arr ((>= numLevels) . gameLevel . gameInfo) >>> edge
 
-createPowerUp :: PowerUpDef -> ObjectSF
-createPowerUp (PowerUpDef name puk pos sz) = powerUp name puk pos sz
+-- | Detect when the last life is lost.
+outOfLives :: SF GameState (Event ())
+outOfLives = arr ((< 0) . gameLives . gameInfo) >>> edge
+
+-- | Detect if the level is completed (ie. if there are no more blocks).
+isLevelCompleted :: SF GameState (Event GameState)
+isLevelCompleted = proc gs -> do
+  over <- edge -< (not . any isBlock . gameObjects ) gs
+  let snapshot = over `tag` gs
+  returnA -< snapshot
 
 -- * Auxiliary functions
 
@@ -362,3 +345,17 @@ countPoints = sum . map numPoints
     countBlocks   = length . filter (collisionObjectKind Block)
     hasPaddle     = any (collisionObjectName "paddle")
     countPointsUp = length . filter (collisionObjectKind (PowerUp PointsUp))
+
+-- ** Put in other modules?
+
+-- | Bonus are additional lives and additional points.
+type Bonus = (Int, Int)
+-- | Indicates the loss of a live.
+type Dead  = Event ()
+
+-- From the actual objects, detect which ones collide
+detectObjectCollisions :: SF (IL ObjectOutput) Collisions
+detectObjectCollisions = extractObjects >>> arr detectCollisions
+
+createPowerUp :: PowerUpDef -> ObjectSF
+createPowerUp (PowerUpDef name puk pos sz) = powerUp name puk pos sz
