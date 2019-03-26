@@ -21,7 +21,7 @@ import Playground.SDL (createRuntimeContext, initDeviceOutput, initGraphs,
 
 -- Internal imports
 import Game.DeviceOutput (render)
-import Resource.Manager  (gameResourceSpec)
+import Resource.Manager  (appResourceSpec)
 #endif
 
 #ifdef ghcjs
@@ -52,7 +52,7 @@ my_main_main =
     ctrlRef <- initInputDevices
     adjustInputSettings
 
-    resSpec <- localizeResourceSpec getDataFileName gameResourceSpec
+    resSpec <- localizeResourceSpec getDataFileName appResourceSpec
     rMgr    <- loadResources resSpec
     rtCtx   <- createRuntimeContext rCtx
 

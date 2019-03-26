@@ -21,8 +21,8 @@ type ResourceMgr = SDLResourceMgr.ResourceManager IORef ResourceId
 #endif
 
 -- | Specifications of the used game resources.
-gameResourceSpec :: ResourceSpec ResourceId
-gameResourceSpec = ResourceSpec
+appResourceSpec :: ResourceSpec ResourceId
+appResourceSpec = ResourceSpec
   { images = [ (IdBg0Img,           bg0Img            )
              , (IdBg1Img,           bg1Img            )
              , (IdBg2Img,           bg2Img            )
