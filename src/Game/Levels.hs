@@ -49,16 +49,17 @@ data LevelInfo = LevelInfo
   , levelName :: String
   }
 
--- | Number of levels. Change this in the code to finish
--- in a different level.
-numLevels :: Int
-numLevels = length levels
-
 -- * Concrete levels
+
 levels :: [LevelSpec]
 levels = map mkLevels [0..16]
   where
     mkLevels i = LevelSpec (bgCol i) (bgImg i) (bgMus i) (lvlInfo i)
+
+-- | Number of levels. Change this in the code to finish
+-- in a different level.
+numLevels :: Int
+numLevels = length levels
 
 -- ** Level parts
 
@@ -620,7 +621,7 @@ blockDescS 16 = map (first4 adjustPos) allBlocks
 
 blockDescS _ = error "No more levels"
 
--- Auxiliary functions
+-- * Auxiliary functions
 
 -- Dynamic positioning/level size
 
