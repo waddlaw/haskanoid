@@ -41,6 +41,9 @@ data LevelSpec = LevelSpec
  , levelInfo :: LevelInfo        -- ^ Level information.
  }
 
+-- | Level information that are used to create the initial level setup.
+-- It contains the walls, the ball, the paddle and the blocks as object sfs and
+-- the level name.
 data LevelInfo = LevelInfo
   { objectSFs :: ObjectSFs
   , levelName :: String
@@ -55,35 +58,45 @@ numLevels = length levels
 levels :: [LevelSpec]
 levels = map mkLevels [0..16]
   where
-    mkLevels i = LevelSpec IdBgColor bgImg bgMus lvlInfo
-      where
-        bgImg | i `mod` 3 == 0
-              = Just IdBg0Img
-              | i `mod` 3 == 1
-              = Just IdBg1Img
-              | i `mod` 3 == 2
-              = Just IdBg2Img
+    mkLevels i = LevelSpec (bgCol i) (bgImg i) (bgMus i) (lvlInfo i)
 
-        bgMus | i `mod` 3 == 0
-              = Just IdBg0Music
-              | i `mod` 3 == 1
-              = Just IdBg1Music
-              | i `mod` 3 == 2
-              = Just IdBg2Music
+-- ** Level parts
 
-        lvlInfo = LevelInfo (initialObjects (blockDescS i)) (show i)
+-- | Background colour for each level.
+bgCol :: Int -> ResourceId
+bgCol i = IdBgColor
 
-        -- | Objects initially present: the walls, the ball, the paddle and the blocks.
-        initialObjects :: [(Pos2D, Int, Maybe (PowerUpKind, AlwaysPowerUp), SignalPowerUp)] -> ObjectSFs
-        initialObjects blocksSpec = listToIL $
-            [ objSideRight
-            , objSideTop
-            , objSideLeft
-            , objSideBottom
-            , objPaddle
-            , objBall
-            ]
-            ++ map (\p -> objBlock p (blockWidth, blockHeight)) blocksSpec
+-- | Background for each level.
+bgImg :: Int -> Maybe ResourceId
+bgImg i | i `mod` 3 == 0
+        = Just IdBg0Img
+        | i `mod` 3 == 1
+        = Just IdBg1Img
+        | i `mod` 3 == 2
+        = Just IdBg2Img
+
+-- | Background music for each level.
+bgMus :: Int -> Maybe ResourceId
+bgMus i | i `mod` 3 == 0
+        = Just IdBg0Music
+        | i `mod` 3 == 1
+        = Just IdBg1Music
+        | i `mod` 3 == 2
+        = Just IdBg2Music
+
+-- | Level information for each level.
+-- It contains the walls, the paddle, the ball and the blocks.
+lvlInfo :: Int -> LevelInfo
+lvlInfo i = LevelInfo (listToIL $
+                         [ objSideRight
+                         , objSideTop
+                         , objSideLeft
+                         , objSideBottom
+                         , objPaddle
+                         , objBall
+                         ]
+                         ++ map (\p -> objBlock p (blockWidth, blockHeight)) (blockDescS i))
+                      (show i)
 
 -- | Level block specification (positions,lives of block, maybe powerup)
 --
@@ -136,7 +149,6 @@ blockDescS 0 = map (first4 adjustPos) allBlocks
        blockRows :: Int
        blockRows = 3
 
-
 -- Level 1
 --   %%%%%%%%
 -- %  X P X P
@@ -178,7 +190,6 @@ blockDescS 1 = map (first4 adjustPos) allBlocks
 
        blockRows :: Int
        blockRows = 4
-
 
 -- Level 2
 -- X == maxBlockLife
@@ -229,8 +240,6 @@ blockDescS 2 = map (first4 adjustPos) allBlocks
        blockRows :: Int
        blockRows = 7
 
-
-
 -- Level 3
 --
 -- X == maxBlockLife
@@ -258,7 +267,6 @@ blockDescS 3 = map (first4 adjustPos) allBlocks
 
        blockRows :: Int
        blockRows = 6
-
 
 -- Level 4
 --   %%%%%%%%
@@ -289,7 +297,6 @@ blockDescS 4 = map (first4 adjustPos) allBlocks
        blockRows :: Int
        blockRows = 7
 
-
 -- Level 5
 --   %%%%%%%%
 -- % XX XXXXX
@@ -319,7 +326,6 @@ blockDescS 5 = map (first4 adjustPos) allBlocks
 
        blockRows :: Int
        blockRows = 9
-
 
 -- Level 6
 -- X == maxBlockLife
@@ -359,7 +365,6 @@ blockDescS 6 = map (first4 adjustPos) allBlocks
        blockRows :: Int
        blockRows = 9
 
-
 -- Level 7
 -- X == maxBlockLife
 -- O == minBlockLife
@@ -394,8 +399,6 @@ blockDescS 7 = map (first4 adjustPos) allBlocks
        blockRows :: Int
        blockRows = 8
 
-
-
 -- Level 8
 --   %%%%%%%%
 -- % XXXXXXX
@@ -421,8 +424,6 @@ blockDescS 8 = map (first4 adjustPos) allBlocks
                       , ((0,5), maxBlockLife, Just (DestroyBallUp, True), False)
                       , ((blockColumns - 1,5), maxBlockLife, Just (DestroyBallUp, True), False)
                       ]
-
-
 
 -- Level 9
 -- X == maxBlockLife
@@ -465,8 +466,6 @@ blockDescS 9 = map (first4 adjustPos) allBlocks
        midRow :: Int
        midRow = blockRows `div` 2
 
-
-
 -- Level 10
 --   %%%%%%%%
 -- %  X X X
@@ -502,7 +501,6 @@ blockDescS 10 = map (first4 adjustPos) allBlocks
 
        midRow :: Int
        midRow = blockRows `div` 2
-
 
 -- BACKUP Levels
 
@@ -545,7 +543,6 @@ blockDescS 12  = map (first4 adjustPos) allBlocks
    blockRows :: Int
    blockRows = 4
 
-
 -- Level 13
 --   %%%%%%%%
 -- %    XX
@@ -581,7 +578,6 @@ blockDescS 14 = map (first4 adjustPos) allBlocks
        blockRows :: Int
        blockRows = 5
 
-
 -- Level 15
 --   %%%%%%%%
 -- %    X
@@ -598,7 +594,6 @@ blockDescS 15 = map (first4 adjustPos) allBlocks
                    ++ [((x,y), maxBlockLife, Nothing, False) | x <- [0..blockColumns-1], y <- [3]]
                    ++ [((x,y), maxBlockLife, Nothing, False) | x <- [2,blockColumns-3], y <- [1,5]]
                    ++ [((x,y), maxBlockLife, Nothing, False) | x <- [1,blockColumns-2], y <- [2,4]]
-
 
 -- Level 16
 --   %%%%%%%%
@@ -623,9 +618,9 @@ blockDescS 16 = map (first4 adjustPos) allBlocks
        midRow :: Int
        midRow = blockRows `div` 2
 
-
 blockDescS _ = error "No more levels"
 
+-- Auxiliary functions
 
 -- Dynamic positioning/level size
 
@@ -663,8 +658,6 @@ signals :: [Maybe (PowerUpKind, AlwaysPowerUp)] -> [SignalPowerUp]
 signals [] = []
 signals (Nothing :puks) = (False : signals puks)
 signals (_:puks)            = (True  : signals puks)
-
--- Auxiliary functions
 
 first4 :: (a -> a') -> (a, b, c, d) -> (a', b, c, d)
 first4 f (a, b, c, d) = (f a, b, c, d)
