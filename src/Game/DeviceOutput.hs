@@ -21,7 +21,6 @@ import Playground                (DAlign, displayWithBGColorImage')
 import Playground.SDL            (dAlignToAbsPos')
 
 -- Internal imports
-import DeviceOutput     (RenderEnv)
 import Game.Constants   (gameLeft, gameTop)
 import Game.Levels      (bgColor, levels, mBgImage, mBgMusic)
 import Game.Object      (Object, ObjectKind (Ball, Block, Paddle, PowerUp),
@@ -31,7 +30,7 @@ import Game.Object      (Object, ObjectKind (Ball, Block, Paddle, PowerUp),
 import Game.State       (GameState, GameStatus (..), gameInfo, gameLevel,
                          gameLevel, gameLevel, gameLives, gameObjects,
                          gamePoints, gameStatus)
-import Resource.Manager (ResourceId (..))
+import Resource.Manager (RenderEnv, ResourceId (..))
 
 #ifdef sdl
 import Graphics.UI.SDL as SDL (enableUnicode, showCursor)

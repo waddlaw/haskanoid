@@ -131,8 +131,7 @@ executable haskanoid
                    sage-resourcemanager-sdl1,
                    sage-sdl1-extra
 
-    other-modules: DeviceOutput
-                   Game.DeviceOutput
+    other-modules: Game.DeviceOutput
                    Resource.Manager
                    Resource.Specs
 
@@ -150,8 +149,7 @@ executable haskanoid
                    sage-resourcemanager-sdl2,
                    sage-sdl2-extra
 
-    other-modules: DeviceOutput
-                   Game.DeviceOutput
+    other-modules: Game.DeviceOutput
                    Resource.Manager
                    Resource.Specs
     extra-libraries: SDL2_image SDL2_ttf SDL2_mixer SDL2 SDL2_gfx

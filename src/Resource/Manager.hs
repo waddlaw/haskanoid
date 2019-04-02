@@ -1,12 +1,18 @@
-{-# LANGUAGE CPP #-}
+{-# LANGUAGE CPP                  #-}
+{-# LANGUAGE FlexibleInstances    #-}
+{-# LANGUAGE TypeSynonymInstances #-}
 -- | Resource manager.
 module Resource.Manager where
 
 -- External imports
+import App.Context                 (RuntimeContext)
+import Control.DeepSeq             (NFData, rnf)
 import Data.IORef                  (IORef)
 import Game.Resource.Manager.IORef ()
 import Game.Resource.Spec          (ResourceSpec (ResourceSpec), colors, fonts,
                                     images, music, sounds)
+import Graphics.UI.SDL
+import Playground.SDL              (RenderingCtx)
 
 #if defined(sdl) || defined (sdl2)
 import Game.Resource.Manager.SDL as SDLResourceMgr (ResourceManager)
@@ -15,36 +21,37 @@ import Game.Resource.Manager.SDL as SDLResourceMgr (ResourceManager)
 -- Internal imports
 import Resource.Specs -- Complete import
 
+-- * Render environment
+
+-- | The rendering environment given by the resource manager,
+-- runtime context, and rendering context.
+--
+-- This is a valid 'GRenderingEnv' which has functions like
+-- renderingEnvResourceMgr, renderingEnvRuntimeCtx and
+-- renderingEnvRuntimeCtx.
+type RenderEnv = (ResourceMgr, RuntimeContext, RenderingCtx)
+
+-- Orphan instaces
+--
+-- Note: Since it is highly probable that they are needed when the RenderEnv is
+-- imported, we put them close to the render environment.
+
+-- | NFData instance for Surface.
+instance NFData Surface where
+  rnf s = s `seq` ()
+
+#ifdef sdl2
+-- | NFData instances for Texture.
+instance NFData Texture where
+  rnf s = s `seq` ()
+#endif
+
 #if defined(sdl) || defined (sdl2)
 -- | A stateful collector that maps 'ResourceId' to SDL/SDL2 resources.
 type ResourceMgr = SDLResourceMgr.ResourceManager IORef ResourceId
 #endif
 
--- | Specifications of the used game resources.
-appResourceSpec :: ResourceSpec ResourceId
-appResourceSpec = ResourceSpec
-  { images = [ (IdBg0Img,           bg0Img            )
-             , (IdBg1Img,           bg1Img            )
-             , (IdBg2Img,           bg2Img            )
-             , (IdBallImg,          ballImage         )
-             , (IdBlock1Img,        block1Image       )
-             , (IdBlock2Img,        block2Image       )
-             , (IdBlock3Img,        block3Image       )
-             , (IdBlockPuImg,       blockPuImage      )
-             , (IdPaddleImg,        paddleImage       )
-             , (IdPointsUpImg,      pointsUpImage     )
-             , (IdLivesUpImg,       livesUpImage      )
-             , (IdMockUpImg,        mockUpImage       )
-             , (IdDestroyBallUpImg, destroyBallUpImage) ]
-  , fonts  = [ (IdGameFont,         gameFontSpec      ) ]
-  , sounds = [ (IdBlockHitFX,       blockHitSFX       ) ]
-  , music  = [ (IdBg0Music,         bg0Music          )
-             , (IdBg1Music,         bg1Music          )
-             , (IdBg2Music,         bg2Music          )
-             ]
-  , colors = [ (IdGameFontColor,    fontColor         )
-             , (IdBgColor,          bgColor           ) ]
-  }
+-- * Resource mapping
 
 -- | Resource ids.
 data ResourceId
@@ -75,6 +82,33 @@ data ResourceId
   | IdBgColor
   | IdGameFontColor
   deriving (Show, Ord, Eq)
+
+-- | Specifications of the used game resources.
+appResourceSpec :: ResourceSpec ResourceId
+appResourceSpec = ResourceSpec
+  { images = [ (IdBg0Img,           bg0Img            )
+             , (IdBg1Img,           bg1Img            )
+             , (IdBg2Img,           bg2Img            )
+             , (IdBallImg,          ballImage         )
+             , (IdBlock1Img,        block1Image       )
+             , (IdBlock2Img,        block2Image       )
+             , (IdBlock3Img,        block3Image       )
+             , (IdBlockPuImg,       blockPuImage      )
+             , (IdPaddleImg,        paddleImage       )
+             , (IdPointsUpImg,      pointsUpImage     )
+             , (IdLivesUpImg,       livesUpImage      )
+             , (IdMockUpImg,        mockUpImage       )
+             , (IdDestroyBallUpImg, destroyBallUpImage) ]
+  , fonts  = [ (IdGameFont,         gameFontSpec      ) ]
+  , sounds = [ (IdBlockHitFX,       blockHitSFX       ) ]
+  , music  = [ (IdBg0Music,         bg0Music          )
+             , (IdBg1Music,         bg1Music          )
+             , (IdBg2Music,         bg2Music          )
+             ]
+  , colors = [ (IdGameFontColor,    fontColor         )
+             , (IdBgColor,          bgColor           ) ]
+  }
+
 
 -- Resource management
 -- loadNewResources :: ResourceMgr ->  GameState -> IO Resources
